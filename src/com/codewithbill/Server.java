@@ -1,6 +1,5 @@
 package com.codewithbill;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -76,13 +75,24 @@ public class Server extends Thread {
         if (request.getClass().equals(String.class)) {
             if (request.equals("NewPlayer")) {
                 oos.writeObject(gameModel.addPlayer());
+                oos.flush();
+                System.out.println("New Player created");
             }
         }
         //player making a move
-        else if (request.getClass().equals(MoveRequest.class)) {
+        else if (request.getClass().equals(Player.class)) {
+            Player player= (Player) request;
+            System.out.println("Receiving player move");
             //Swapping pieces
-
+            gameModel.swapPieces(player.getHand());
             //placing on board
+            gameModel.addToBoard(player.getHand());
+            //Send results back to player
+            oos.writeObject(new MoveResponse(gameModel.curPlayer,gameModel.getBoard()));
+            oos.flush();
+            System.out.println("Sending updated hand and board state back to player");
+            gameModel.changeCurPlayer();
+            System.out.println("Changed current player");
         }
 
     }

@@ -14,13 +14,13 @@ public class GameModel {
 
     //108 tiles in the game bag
     private static ArrayList<Tile> bag = new ArrayList<>();
-    private static ArrayList<Tile> board=new ArrayList<>();
+    private static ArrayList<Tile> board = new ArrayList<>();
     //2-4 players
     private static ArrayList<Player> players = new ArrayList<>();
     //player info
     public static int playerTotal = 0;
     public static int curPlayerNo = 0;
-    public static Player curPlayer;
+    public Player curPlayer;
 
     public GameModel(int playerNo) {
         GameModel.playerTotal = playerNo;
@@ -31,7 +31,8 @@ public class GameModel {
         curPlayer = players.get(0);
         //generate board
     }
-    public GameModel(){
+
+    public GameModel() {
         generatePieces();
     }
 
@@ -83,7 +84,7 @@ public class GameModel {
         }
     }
 
-    private ArrayList<Tile> createPlayerHand(){
+    private ArrayList<Tile> createPlayerHand() {
         ArrayList<Tile> hand = new ArrayList<>();
         Random r = new Random();
         for (int x = 0; x < 6; x++) {
@@ -97,6 +98,7 @@ public class GameModel {
     }
 
     public int changeCurPlayer() {
+        if (players.size() == 1) return 0;
         if (curPlayerNo == 0) {
             curPlayerNo++;
             curPlayer = players.get(curPlayerNo);
@@ -107,26 +109,43 @@ public class GameModel {
         return curPlayerNo;
     }
 
-    public void swapPieces(ArrayList<Tile> hand) {
-        if (hand.size() > bag.size()) return;
-        ArrayList<Tile> playerHand = curPlayer.getHand();
-        Stream stream = hand.stream().filter(tile -> tile.state.equals(Tile.State.swapping));
-
-        List<Tile> swapList= (List<Tile>)stream.collect(Collectors.toList());
-        for (Tile tile : swapList) {
-            if (tile.state.equals(Tile.State.swapping)) {
-                playerHand.remove(tile);
-                tile.setState(Tile.State.inBag);
-                bag.add(tile);
+    public void addToBoard(ArrayList<Tile> hand) {
+        boolean placed = false;
+        Stream stream = hand.stream().filter(tile -> tile.state.equals(Tile.State.placing));
+        List<Tile> placeList = (List<Tile>) stream.collect(Collectors.toList());
+        for (Tile tile : placeList) {
+            if (tile.state.equals(Tile.State.placing)) {
+                hand.remove(tile);
+                tile.setState(Tile.State.onBoard);
+                board.add(tile);
+                placed = true;
             }
         }
-        shuffle();
-        fillHand();
-//        for (Tile tile : swapList) {
-//            Tile newTile = bag.remove(bag.size() - 1);
-//            tile.setState(Tile.State.inHand);
-//            playerHand.add(newTile);
-//        }
+        if (placed) {
+            curPlayer.setHand(hand);
+            fillHand();
+        }
+    }
+
+    public void swapPieces(ArrayList<Tile> hand) {
+        boolean swapped = false;
+        if (hand.size() > bag.size()) return;
+        Stream stream = hand.stream().filter(tile -> tile.state.equals(Tile.State.swapping));
+
+        List<Tile> swapList = (List<Tile>) stream.collect(Collectors.toList());
+        for (Tile tile : swapList) {
+            if (tile.state.equals(Tile.State.swapping)) {
+                hand.remove(tile);
+                tile.setState(Tile.State.inBag);
+                bag.add(tile);
+                swapped = true;
+            }
+        }
+        if (swapped) {
+            shuffle();
+            curPlayer.setHand(hand);
+            fillHand();
+        }
     }
 
     public void fillHand() {
@@ -141,11 +160,11 @@ public class GameModel {
         this.bag = bag;
     }
 
-    public Player addPlayer(){
-        if(bag.size()<6)return null;
-        Player player= new Player(createPlayerHand());
+    public Player addPlayer() {
+        if (bag.size() < 6) return null;
+        Player player = new Player(createPlayerHand());
         players.add(player);
-        if(players.size()==1)curPlayer=players.get(0);
+        if (players.size() == 1) curPlayer = players.get(0);
         return player;
     }
 
@@ -153,31 +172,16 @@ public class GameModel {
         this.players = players;
     }
 
-    public ArrayList<Tile> getBoard(){
+    public ArrayList<Tile> getBoard() {
         return board;
     }
+
     public ArrayList<Player> getPlayers() {
         return players;
     }
+
     public ArrayList<Tile> getBag() {
         return bag;
     }
 }
-// public final String[] colors = {"Blue", "Green", "Red", "Yellow", "Purple", "Orange"};
-//    public final String[] shapes = {"Square", "Circle", "Start", "Diamond", "Cross", "Club"};
-//    public void generatePiece() {
-//        //three sets of 36 tiles ctrl+alt+l
-//        //the repeat to do each shape in the same color three times
-//        for (int i = 0; i < 3; i++) {
-//
-//            for (String color : colors) {
-//
-//                for (String shape : shapes) {
-//
-//                   // Tile tile = new Tile(color, shape);
-//                    //pieces.add(tile);
-//                }
-//            }
-//        }
-//        Shuffle();
-//    }
+
