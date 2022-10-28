@@ -1,5 +1,6 @@
 package com.codewithbill;
 
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,30 +11,23 @@ import java.util.stream.Stream;
 import static com.codewithbill.Tile.Color;
 import static com.codewithbill.Tile.Shape;
 
-public class GameModel {
+public class GameModel implements Serializable {
 
     //108 tiles in the game bag
     private static ArrayList<Tile> bag = new ArrayList<>();
     private static ArrayList<Tile> board = new ArrayList<>();
     //2-4 players
     private static ArrayList<Player> players = new ArrayList<>();
-    //player info
-    public static int playerTotal = 0;
+    private Integer gameID;
+    public boolean isReady;
+    public int playerTotal = 0;
     public static int curPlayerNo = 0;
     public Player curPlayer;
 
-    public GameModel(int playerNo) {
-        GameModel.playerTotal = playerNo;
-        //generate all 108 tiles in random order in the pieces bag
+    public GameModel(int playerTotal) {
         generatePieces();
-        //initial hand for each player
-        createPlayersHand(playerNo);
-        curPlayer = players.get(0);
-        //generate board
-    }
-
-    public GameModel() {
-        generatePieces();
+        this.playerTotal=playerTotal;
+        isReady=false;
     }
 
     //fills bag with random pieces
@@ -156,16 +150,17 @@ public class GameModel {
         }
     }
 
-    public void setBag(ArrayList<Tile> bag) {
-        this.bag = bag;
-    }
-
     public Player addPlayer() {
         if (bag.size() < 6) return null;
-        Player player = new Player(createPlayerHand());
+        Player player = new Player(createPlayerHand());player.setGameID(gameID);
         players.add(player);
+        if(players.size()==playerTotal)isReady=true;
         if (players.size() == 1) curPlayer = players.get(0);
         return player;
+    }
+
+    public void setGameID(int gamesIndex){
+        gameID=gamesIndex;
     }
 
     public void setPlayers(ArrayList<Player> players) {

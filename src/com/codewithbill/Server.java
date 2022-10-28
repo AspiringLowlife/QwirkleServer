@@ -6,13 +6,18 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Server extends Thread {
     public static int portNum = 500;
-    private final GameModel gameModel = new GameModel();
+    //private final GameModel gameModel = new GameModel();
+
     int counter = 1;
-    int uniqueID = 1;
-    //DataOutputStream dos;
+    //Managing new games and assigning players to their games
+    int playerCount = 0;
+    private List<GameModel> games = new ArrayList<>();
+    private List<Player> players = new ArrayList<>();
     ObjectOutputStream oos;
     ObjectInputStream ois;
 
@@ -47,7 +52,7 @@ public class Server extends Thread {
                 // Step 3: Get dis and dos streams.
                 ois = new ObjectInputStream(connection.getInputStream());
                 //dos = new DataOutputStream(connection.getOutputStream());
-                oos=new ObjectOutputStream(connection.getOutputStream());
+                oos = new ObjectOutputStream(connection.getOutputStream());
                 System.out.println("SERVER: Got I/O streams");
 
                 // Step 4: Process connection.
@@ -70,30 +75,56 @@ public class Server extends Thread {
         oos.writeObject("Connection successful #" + counter);
         oos.flush();
 
-        Object request =  ois.readObject();
-        //adding a new player
-        if (request.getClass().equals(String.class)) {
-            if (request.equals("NewPlayer")) {
-                oos.writeObject(gameModel.addPlayer());
-                oos.flush();
-                System.out.println("New Player created");
+        Object request = ois.readObject();
+        //adding a new Game
+        if (request.getClass().equals(Integer.class)) {
+            GameModel newGame = new GameModel((Integer) request);
+            games.add(newGame);
+            newGame.setGameID(games.size() - 1);
+            System.out.println("New game created");
+            oos.writeObject(newGame.addPlayer());
+            oos.flush();
+        }
+        //joining existing game
+        else if (request.getClass().equals(String.class)) {
+            if (request.equals("JoinExisting")) {
+                for (GameModel game : games) {
+                    if (!game.isReady) {
+                        oos.writeObject(game.addPlayer());
+                        oos.flush();
+                        System.out.println("New Player added to existing game");
+                    }
+                }
+            }
+            else if(request.equals("CheckExisting")){
+                for (GameModel game:games){
+                    if(!game.isReady){
+                        oos.writeObject("Yep");
+                        oos.flush();
+                        System.out.println("Client requested if any games available, there are");
+                    }
+                }
             }
         }
         //player making a move
-        else if (request.getClass().equals(Player.class)) {
-            Player player= (Player) request;
-            System.out.println("Receiving player move");
-            //Swapping pieces
-            gameModel.swapPieces(player.getHand());
-            //placing on board
-            gameModel.addToBoard(player.getHand());
-            //Send results back to player
-            oos.writeObject(new MoveResponse(gameModel.curPlayer,gameModel.getBoard()));
-            oos.flush();
-            System.out.println("Sending updated hand and board state back to player");
-            gameModel.changeCurPlayer();
-            System.out.println("Changed current player");
-        }
-
+//        else if(request.getClass().
+//
+//    equals(Player .class))
+//
+//    {
+//        Player player = (Player) request;
+//        System.out.println("Receiving player move");
+//        //Swapping pieces
+//        gameModel.swapPieces(player.getHand());
+//        //placing on board
+//        gameModel.addToBoard(player.getHand());
+//        //Send results back to player
+//        oos.writeObject(new MoveResponse(gameModel.curPlayer, gameModel.getBoard()));
+//        oos.flush();
+//        System.out.println("Sending updated hand and board state back to player");
+//        gameModel.changeCurPlayer();
+//        System.out.println("Changed current player");
+//    }
     }
+
 }
