@@ -95,15 +95,27 @@ public class Server extends Thread {
                         System.out.println("New Player added to existing game");
                     }
                 }
-            }
-            else if(request.equals("CheckExisting")){
-                for (GameModel game:games){
-                    if(!game.isReady){
+            } else if (request.equals("CheckExisting")) {
+                for (GameModel game : games) {
+                    if (!game.isReady) {
                         oos.writeObject("Yep");
                         oos.flush();
                         System.out.println("Client requested if any games available, there are");
                     }
                 }
+            }
+        }
+        //Requests checking for full game or requests for turn
+        else if (request.getClass().equals(PlayerRequest.class)) {
+            //check if game of requesting player is ready
+            PlayerRequest playerRequest = (PlayerRequest) request;
+            if (playerRequest.requestString.equals("CheckIsGameReady")) {
+                Boolean result = games.get(playerRequest.player.getGameID()).isReady;
+                oos.writeObject(result);
+                oos.flush();
+                System.out.println("Is Game ready: "+result.toString());
+            } else if (playerRequest.requestString.equals("CheckTurn")) {
+
             }
         }
         //player making a move

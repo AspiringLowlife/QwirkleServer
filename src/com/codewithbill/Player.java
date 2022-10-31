@@ -23,4 +23,8 @@ public class Player implements Serializable {
     public void setHand(ArrayList<Tile> hand) {
         this.hand = hand;
     }
+
+    public int getGameID() {
+        return gameID;
+    }
 }
