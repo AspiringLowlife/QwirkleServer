@@ -14,10 +14,10 @@ import static com.codewithbill.Tile.Shape;
 public class GameModel implements Serializable {
 
     //108 tiles in the game bag
-    private static ArrayList<Tile> bag = new ArrayList<>();
-    private static ArrayList<Tile> board = new ArrayList<>();
+    private ArrayList<Tile> bag = new ArrayList<>();
+    private ArrayList<Tile> board = new ArrayList<>();
     //2-4 players
-    private static ArrayList<Player> players = new ArrayList<>();
+    private ArrayList<Player> players = new ArrayList<>();
     private Integer gameID;
     public boolean isReady;
     public int playerTotal = 0;

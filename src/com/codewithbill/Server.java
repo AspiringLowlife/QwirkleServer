@@ -11,13 +11,11 @@ import java.util.List;
 
 public class Server extends Thread {
     public static int portNum = 500;
-    //private final GameModel gameModel = new GameModel();
 
     int counter = 1;
     //Managing new games and assigning players to their games
     int playerCount = 0;
     private List<GameModel> games = new ArrayList<>();
-    private List<Player> players = new ArrayList<>();
     ObjectOutputStream oos;
     ObjectInputStream ois;
 
@@ -105,38 +103,50 @@ public class Server extends Thread {
                 }
             }
         }
-        //Requests checking for full game or requests for turn
+        //Timer requests
         else if (request.getClass().equals(PlayerRequest.class)) {
-            //check if game of requesting player is ready
+            //check if game is ready used in WaitingRoom
             PlayerRequest playerRequest = (PlayerRequest) request;
+            GameModel game = games.get(playerRequest.player.getGameID());
             if (playerRequest.requestString.equals("CheckIsGameReady")) {
-                Boolean result = games.get(playerRequest.player.getGameID()).isReady;
+                Boolean result = game.isReady;
                 oos.writeObject(result);
                 oos.flush();
-                System.out.println("Is Game ready: "+result.toString());
+                System.out.println("Is Game ready: " + result.toString());
+                //check turn used in MainActivity
             } else if (playerRequest.requestString.equals("CheckTurn")) {
-
+                ArrayList<Tile> requestHand = playerRequest.player.getHand();
+                ArrayList<Tile> serverHand = game.curPlayer.getHand();
+                for (int i = 0; i < requestHand.size(); i++) {
+                    Tile requestTile = requestHand.get(i);
+                    Tile serverTile = serverHand.get(i);
+                    if (!requestTile.toString().equals(serverTile.toString())) {
+                        oos.writeObject(false);
+                        oos.flush();
+                        return;
+                    }
+                }
+                oos.writeObject(new MoveResponse(game.curPlayer, game.getBoard()));
+                oos.flush();
+                System.out.println("Returned current board to players");
             }
         }
         //player making a move
-//        else if(request.getClass().
-//
-//    equals(Player .class))
-//
-//    {
-//        Player player = (Player) request;
-//        System.out.println("Receiving player move");
-//        //Swapping pieces
-//        gameModel.swapPieces(player.getHand());
-//        //placing on board
-//        gameModel.addToBoard(player.getHand());
-//        //Send results back to player
-//        oos.writeObject(new MoveResponse(gameModel.curPlayer, gameModel.getBoard()));
-//        oos.flush();
-//        System.out.println("Sending updated hand and board state back to player");
-//        gameModel.changeCurPlayer();
-//        System.out.println("Changed current player");
-//    }
+        else if (request.getClass().equals(Player.class)) {
+            Player player = (Player) request;
+            GameModel game = games.get(player.getGameID());
+            System.out.println("Receiving player move");
+            //Swapping pieces
+            game.swapPieces(player.getHand());
+            //placing on board
+            game.addToBoard(player.getHand());
+            //Send results back to player
+            oos.writeObject(new MoveResponse(game.curPlayer, game.getBoard()));
+            oos.flush();
+            System.out.println("Sending updated hand and board state back to player");
+            game.changeCurPlayer();
+            System.out.println("Changed current player");
+        }
     }
 
 }
