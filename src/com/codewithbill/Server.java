@@ -103,7 +103,7 @@ public class Server extends Thread {
                 }
             }
         }
-        //Timer requests
+        //Timer requests or cancelling a game
         else if (request.getClass().equals(PlayerRequest.class)) {
             //check if game is ready used in WaitingRoom
             PlayerRequest playerRequest = (PlayerRequest) request;
@@ -114,7 +114,8 @@ public class Server extends Thread {
                 oos.flush();
                 System.out.println("Is Game ready: " + result.toString());
                 //check turn used in MainActivity
-            } else if (playerRequest.requestString.equals("CheckTurn")) {
+            }
+            else if (playerRequest.requestString.equals("CheckTurn")) {
                 ArrayList<Tile> requestHand = playerRequest.player.getHand();
                 ArrayList<Tile> serverHand = game.curPlayer.getHand();
                 for (int i = 0; i < requestHand.size(); i++) {
@@ -129,6 +130,10 @@ public class Server extends Thread {
                 oos.writeObject(new MoveResponse(game.curPlayer, game.getBoard()));
                 oos.flush();
                 System.out.println("Returned current board to players");
+            }
+            else if(playerRequest.requestString.equals("CancelGame")){
+                games.remove(playerRequest.player.getGameID());
+                System.out.println("Game cancelled and removed");
             }
         }
         //player making a move
@@ -148,5 +153,4 @@ public class Server extends Thread {
             System.out.println("Changed current player");
         }
     }
-
 }
