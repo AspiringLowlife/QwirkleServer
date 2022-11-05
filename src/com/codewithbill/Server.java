@@ -91,8 +91,12 @@ public class Server extends Thread {
                         oos.writeObject(game.addPlayer());
                         oos.flush();
                         System.out.println("New Player added to existing game");
+                        return;
                     }
                 }
+                //no game to join but join existing still clicked
+                oos.writeObject("Nope");
+                oos.flush();
             } else if (request.equals("CheckExisting")) {
                 for (GameModel game : games) {
                     if (!game.isReady) {
@@ -101,10 +105,6 @@ public class Server extends Thread {
                         System.out.println("Client requested if any games available, there are");
                     }
                 }
-            }
-            //get list of players in game
-            //Todo do a class with generic and string key
-            else if (request.equals("1")) {
             }
         }
         //Timer requests
