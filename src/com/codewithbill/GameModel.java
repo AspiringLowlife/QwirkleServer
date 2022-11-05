@@ -26,8 +26,8 @@ public class GameModel implements Serializable {
 
     public GameModel(int playerTotal) {
         generatePieces();
-        this.playerTotal=playerTotal;
-        isReady=false;
+        this.playerTotal = playerTotal;
+        isReady = false;
     }
 
     //fills bag with random pieces
@@ -91,16 +91,13 @@ public class GameModel implements Serializable {
         return hand;
     }
 
-    public int changeCurPlayer() {
-        if (players.size() == 1) return 0;
-        if (curPlayerNo == 0) {
+    public void changeCurPlayer() {
+        if (curPlayerNo < playerTotal - 1) {
             curPlayerNo++;
-            curPlayer = players.get(curPlayerNo);
-        } else if (curPlayerNo == 1) {
-            curPlayerNo--;
-            curPlayer = players.get(curPlayerNo);
+        } else {
+            curPlayerNo = 0;
         }
-        return curPlayerNo;
+        curPlayer = players.get(curPlayerNo);
     }
 
     public void addToBoard(ArrayList<Tile> hand) {
@@ -143,7 +140,7 @@ public class GameModel implements Serializable {
     }
 
     public void fillHand() {
-        while (curPlayer.getHand().size() < 6 && bag.size() > 1) {
+        while (curPlayer.getHand().size() < 6 && bag.size() > 0) {
             Tile newTile = bag.remove(bag.size() - 1);
             curPlayer.getHand().add(newTile);
             newTile.setState(Tile.State.inHand);
@@ -152,15 +149,39 @@ public class GameModel implements Serializable {
 
     public Player addPlayer() {
         if (bag.size() < 6) return null;
-        Player player = new Player(createPlayerHand());player.setGameID(gameID);
+        Player player = new Player(createPlayerHand());
+        player.setGameID(gameID);
         players.add(player);
-        if(players.size()==playerTotal)isReady=true;
+        if (players.size() == playerTotal) isReady = true;
         if (players.size() == 1) curPlayer = players.get(0);
         return player;
     }
 
-    public void setGameID(int gamesIndex){
-        gameID=gamesIndex;
+    public void removePlayer(Player player) {
+
+
+        ArrayList<Tile> playerHand = player.getHand();
+        Player serverPlayer = null;
+//        outerLoop:
+        for (int i = 0; i < players.size(); i++) {
+            serverPlayer = players.get(i);
+            ArrayList<Tile> serverHand = serverPlayer.getHand();
+            for (int j = 0; j < serverPlayer.getHand().size() - 1; j++) {
+                if (!serverHand.get(j).toString().equals(playerHand.get(j).toString())) break;
+            }
+            break;
+        }
+        //put tiles back in bag
+        for (Tile tile : serverPlayer.getHand()) {
+            tile.setState(Tile.State.inBag);
+            bag.add(tile);
+        }
+        shuffle();
+        players.remove(serverPlayer);
+    }
+
+    public void setGameID(int gamesIndex) {
+        gameID = gamesIndex;
     }
 
     public void setPlayers(ArrayList<Player> players) {
@@ -177,6 +198,22 @@ public class GameModel implements Serializable {
 
     public ArrayList<Tile> getBag() {
         return bag;
+    }
+
+    //tester Method not Apart of game
+    public void fillBoard() {
+        for (Player player : players) {
+            for (Tile tile : player.getHand()) {
+                tile.setState(Tile.State.inBag);
+                bag.add(tile);
+            }
+        }
+        for (Tile tile : bag) {
+            tile.setState(Tile.State.onBoard);
+            board.add(tile);
+        }
+        bag = new ArrayList<>();
+        this.isReady=true;
     }
 }
 

@@ -83,7 +83,7 @@ public class Server extends Thread {
             oos.writeObject(newGame.addPlayer());
             oos.flush();
         }
-        //joining existing game
+        //joining existing game checking existing
         else if (request.getClass().equals(String.class)) {
             if (request.equals("JoinExisting")) {
                 for (GameModel game : games) {
@@ -102,20 +102,32 @@ public class Server extends Thread {
                     }
                 }
             }
+            //get list of players in game
+            //Todo do a class with generic and string key
+            else if (request.equals("1")) {
+            }
         }
-        //Timer requests or cancelling a game
+        //Timer requests
         else if (request.getClass().equals(PlayerRequest.class)) {
-            //check if game is ready used in WaitingRoom
+
             PlayerRequest playerRequest = (PlayerRequest) request;
             GameModel game = games.get(playerRequest.player.getGameID());
+            //check if game is ready used in WaitingRoom
             if (playerRequest.requestString.equals("CheckIsGameReady")) {
                 Boolean result = game.isReady;
                 oos.writeObject(result);
                 oos.flush();
                 System.out.println("Is Game ready: " + result.toString());
-                //check turn used in MainActivity
             }
+            //check turn used in MainActivity
             else if (playerRequest.requestString.equals("CheckTurn")) {
+                //if game is cancelled or finished
+                if (game.getBoard().size() == 108) {
+                    oos.writeObject("GameDone");
+                    oos.flush();
+                    System.out.println("Game is finished");
+                    return;
+                }
                 ArrayList<Tile> requestHand = playerRequest.player.getHand();
                 ArrayList<Tile> serverHand = game.curPlayer.getHand();
                 for (int i = 0; i < requestHand.size(); i++) {
@@ -131,9 +143,17 @@ public class Server extends Thread {
                 oos.flush();
                 System.out.println("Returned current board to players");
             }
-            else if(playerRequest.requestString.equals("CancelGame")){
-                games.remove(playerRequest.player.getGameID());
-                System.out.println("Game cancelled and removed");
+            //Player clicks cancel icon
+            else if (playerRequest.requestString.equals("LeaveGame")) {
+                game.removePlayer(playerRequest.player);
+                game.fillBoard();
+                System.out.println("Player removed from game");
+            }
+            //used in results screen
+            else if (playerRequest.requestString.equals("GetAllPlayers")) {
+                oos.writeObject(game.getPlayers());
+                oos.flush();
+                System.out.println("Returned list of Players");
             }
         }
         //player making a move
