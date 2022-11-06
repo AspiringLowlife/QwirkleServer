@@ -82,6 +82,8 @@ public class Server extends Thread {
             System.out.println("New game created");
             oos.writeObject(newGame.addPlayer());
             oos.flush();
+            //todo
+//            newGame.addPlayer();
         }
         //joining existing game checking existing
         else if (request.getClass().equals(String.class)) {
@@ -107,53 +109,56 @@ public class Server extends Thread {
                 }
             }
         }
-        //Timer requests
+        //Turn Management
+        //queueing for game
+        //ending a game
         else if (request.getClass().equals(PlayerRequest.class)) {
-
             PlayerRequest playerRequest = (PlayerRequest) request;
             GameModel game = games.get(playerRequest.player.getGameID());
-            //check if game is ready used in WaitingRoom
-            if (playerRequest.requestString.equals("CheckIsGameReady")) {
-                Boolean result = game.isReady;
-                oos.writeObject(result);
-                oos.flush();
-                System.out.println("Is Game ready: " + result.toString());
-            }
-            //check turn used in MainActivity
-            else if (playerRequest.requestString.equals("CheckTurn")) {
-                //if game is cancelled or finished
-                if (game.getBoard().size() == 108) {
-                    oos.writeObject("GameDone");
+            //check if game is ready, used in WaitingRoom
+            switch (playerRequest.requestString) {
+                case "CheckIsGameReady":
+                    Boolean result = game.isReady;
+                    oos.writeObject(result);
                     oos.flush();
-                    System.out.println("Game is finished");
-                    return;
-                }
-                ArrayList<Tile> requestHand = playerRequest.player.getHand();
-                ArrayList<Tile> serverHand = game.curPlayer.getHand();
-                for (int i = 0; i < requestHand.size(); i++) {
-                    Tile requestTile = requestHand.get(i);
-                    Tile serverTile = serverHand.get(i);
-                    if (!requestTile.toString().equals(serverTile.toString())) {
-                        oos.writeObject(false);
+                    System.out.println("Is Game ready: " + result.toString());
+                    break;
+                //check turn used in MainActivity
+                case "CheckTurn":
+                    //if game is cancelled or finished
+                    if (game.isGameDone()) {
+                        oos.writeObject("GameDone");
                         oos.flush();
+                        System.out.println("Game is finished");
                         return;
                     }
-                }
-                oos.writeObject(new MoveResponse(game.curPlayer, game.getBoard()));
-                oos.flush();
-                System.out.println("Returned current board to players");
-            }
-            //Player clicks cancel icon
-            else if (playerRequest.requestString.equals("LeaveGame")) {
-                game.removePlayer(playerRequest.player);
-                game.fillBoard();
-                System.out.println("Player removed from game");
-            }
-            //used in results screen
-            else if (playerRequest.requestString.equals("GetAllPlayers")) {
-                oos.writeObject(game.getPlayers());
-                oos.flush();
-                System.out.println("Returned list of Players");
+                    ArrayList<Tile> requestHand = playerRequest.player.getHand();
+                    ArrayList<Tile> serverHand = game.curPlayer.getHand();
+                    for (int i = 0; i < requestHand.size(); i++) {
+                        Tile requestTile = requestHand.get(i);
+                        Tile serverTile = serverHand.get(i);
+                        if (!requestTile.toString().equals(serverTile.toString())) {
+                            oos.writeObject(false);
+                            oos.flush();
+                            return;
+                        }
+                    }
+                    oos.writeObject(new MoveResponse(game.curPlayer, game.getBoard()));
+                    oos.flush();
+                    System.out.println("Returned current board to players");
+                    break;
+                //Player clicks cancel icon
+                case "LeaveGame":
+                    game.removePlayer(playerRequest.player);
+                    game.setGameDone();
+                    System.out.println("Player removed from game");
+                    break;
+                //used in results screen
+                case "GetAllPlayers":
+                    oos.writeObject(game.getPlayers());
+                    oos.flush();
+                    System.out.println("Returned list of Players");
+                    break;
             }
         }
         //player making a move
@@ -161,7 +166,7 @@ public class Server extends Thread {
             Player player = (Player) request;
             GameModel game = games.get(player.getGameID());
             System.out.println("Receiving player move");
-            //Swapping pieces
+            //Swapping pieces only swapping or placing will happen not both
             game.swapPieces(player.getHand());
             //placing on board
             game.addToBoard(player.getHand());

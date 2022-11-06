@@ -20,6 +20,7 @@ public class GameModel implements Serializable {
     private ArrayList<Player> players = new ArrayList<>();
     private Integer gameID;
     public boolean isReady;
+    private boolean gameDone;
     public int playerTotal = 0;
     public static int curPlayerNo = 0;
     public Player curPlayer;
@@ -28,12 +29,13 @@ public class GameModel implements Serializable {
         generatePieces();
         this.playerTotal = playerTotal;
         isReady = false;
+        gameDone=false;
     }
 
     //fills bag with random pieces
     public void generatePieces() {
         //repeat this three times so each shape has three in the same color
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 1; i++) {
 
             for (int s = 0; s < 6; s++) {
 
@@ -110,12 +112,18 @@ public class GameModel implements Serializable {
                 tile.setState(Tile.State.onBoard);
                 board.add(tile);
                 placed = true;
+                //Random number for points scored
+                Random ran=new Random();
+                int points= ran.nextInt(10);
+                curPlayer.addScore(points);
             }
         }
         if (placed) {
             curPlayer.setHand(hand);
             fillHand();
         }
+        //game ending condition
+        if(curPlayer.getHand().isEmpty())gameDone=true;
     }
 
     public void swapPieces(ArrayList<Tile> hand) {
@@ -214,6 +222,13 @@ public class GameModel implements Serializable {
         }
         bag = new ArrayList<>();
         this.isReady=true;
+    }
+
+    public boolean isGameDone() {
+        return gameDone;
+    }
+    public void setGameDone(){
+        gameDone=true;
     }
 }
 
