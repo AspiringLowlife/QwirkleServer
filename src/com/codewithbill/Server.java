@@ -82,8 +82,6 @@ public class Server extends Thread {
             System.out.println("New game created");
             oos.writeObject(newGame.addPlayer());
             oos.flush();
-            //todo
-//            newGame.addPlayer();
         }
         //joining existing game checking existing
         else if (request.getClass().equals(String.class)) {
@@ -115,8 +113,8 @@ public class Server extends Thread {
         else if (request.getClass().equals(PlayerRequest.class)) {
             PlayerRequest playerRequest = (PlayerRequest) request;
             GameModel game = games.get(playerRequest.player.getGameID());
-            //check if game is ready, used in WaitingRoom
             switch (playerRequest.requestString) {
+                //check if game is ready, used in WaitingRoom
                 case "CheckIsGameReady":
                     Boolean result = game.isReady;
                     oos.writeObject(result);
@@ -132,20 +130,29 @@ public class Server extends Thread {
                         System.out.println("Game is finished");
                         return;
                     }
-                    ArrayList<Tile> requestHand = playerRequest.player.getHand();
-                    ArrayList<Tile> serverHand = game.curPlayer.getHand();
-                    for (int i = 0; i < requestHand.size(); i++) {
-                        Tile requestTile = requestHand.get(i);
-                        Tile serverTile = serverHand.get(i);
-                        if (!requestTile.toString().equals(serverTile.toString())) {
-                            oos.writeObject(false);
-                            oos.flush();
-                            return;
-                        }
+//                    ArrayList<Tile> requestHand = playerRequest.player.getHand();
+//                    ArrayList<Tile> serverHand = game.curPlayer.getHand();
+//                    for (int i = 0; i < requestHand.size(); i++) {
+//                        Tile requestTile = requestHand.get(i);
+//                        Tile serverTile = serverHand.get(i);
+//                        if (!requestTile.toString().equals(serverTile.toString())) {
+//                            oos.writeObject(false);
+//                            oos.flush();
+//                            return;
+//                        }
+//                    }
+                    //it is this person's turn
+                    if (playerRequest.player.getPlayerID() == game.curPlayer.getPlayerID()) {
+                        oos.writeObject(new MoveResponse(game.curPlayer, game.getBoard()));
+                        oos.flush();
+                        System.out.println("Returned current board to players");
+                    } else {
+                        oos.writeObject(false);
+                        oos.flush();
                     }
-                    oos.writeObject(new MoveResponse(game.curPlayer, game.getBoard()));
-                    oos.flush();
-                    System.out.println("Returned current board to players");
+//                    oos.writeObject(new MoveResponse(game.curPlayer, game.getBoard()));
+//                    oos.flush();
+//                    System.out.println("Returned current board to players");
                     break;
                 //Player clicks cancel icon
                 case "LeaveGame":

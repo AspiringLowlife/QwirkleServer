@@ -35,7 +35,7 @@ public class GameModel implements Serializable {
     //fills bag with random pieces
     public void generatePieces() {
         //repeat this three times so each shape has three in the same color
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 3; i++) {
 
             for (int s = 0; s < 6; s++) {
 
@@ -63,23 +63,7 @@ public class GameModel implements Serializable {
         }
     }
 
-    //initial hand
-    private void createPlayersHand(int playerNo) {
-        Random r = new Random();
-        for (int i = 0; i < playerNo; i++) {
-            ArrayList<Tile> hand = new ArrayList<>();
-            for (int x = 0; x < 6; x++) {
-                int randomPos = r.nextInt(bag.size());
-                Tile yoinkedPiece = bag.get(randomPos);
-                bag.remove(randomPos);
-                hand.add(yoinkedPiece);
-                yoinkedPiece.setState(Tile.State.inHand);
-            }
-            Player player = new Player(hand);
-            players.add(player);
-        }
-    }
-
+    //initial hand  made
     private ArrayList<Tile> createPlayerHand() {
         ArrayList<Tile> hand = new ArrayList<>();
         Random r = new Random();
@@ -114,7 +98,7 @@ public class GameModel implements Serializable {
                 placed = true;
                 //Random number for points scored
                 Random ran=new Random();
-                int points= ran.nextInt(10);
+                int points= ran.nextInt(12);
                 curPlayer.addScore(points);
             }
         }
@@ -157,7 +141,7 @@ public class GameModel implements Serializable {
 
     public Player addPlayer() {
         if (bag.size() < 6) return null;
-        Player player = new Player(createPlayerHand());
+        Player player = new Player(createPlayerHand(),players.size());
         player.setGameID(gameID);
         players.add(player);
         if (players.size() == playerTotal) isReady = true;
@@ -229,6 +213,7 @@ public class GameModel implements Serializable {
     }
     public void setGameDone(){
         gameDone=true;
+        isReady=true;
     }
 }
 

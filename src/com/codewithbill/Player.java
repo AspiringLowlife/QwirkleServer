@@ -5,12 +5,14 @@ import java.util.ArrayList;
 
 public class Player implements Serializable, Comparable<Player>{
     private ArrayList<Tile> hand;
+    private int playerID;
     private int gameID;
     private Integer score;
 
-    public Player(ArrayList<Tile> hand) {
+    public Player(ArrayList<Tile> hand,int playerID) {
         this.hand = hand;
         score = 0;
+        this.playerID=playerID;
     }
 
     public void setGameID(int gameIndex) {
@@ -34,6 +36,10 @@ public class Player implements Serializable, Comparable<Player>{
       if(score< player.getScore())return 1;
       else if(score== player.score)return 0;
       else return -1;
+    }
+
+    public int getPlayerID() {
+        return playerID;
     }
 
     public int getGameID() {
